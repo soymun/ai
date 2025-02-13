@@ -46,6 +46,7 @@ pr=knn.predict(X_test)
 print("Прогноз вида на тестовом наборе:\n {}".format(pr))
 print("Точность прогноза на тестовом наборе:{:.2f}".format(np.mean(pr==y_test)))
 print(' Обученная модель:')
+
 #print([knn.fit(X_train,y_train)])
 loaded_model = pickle.load(open(filename, 'rb'))
 X_new1=np.array([[5.9, 3. , 5.1, 1.8],[6.9, 3.1, 4.9, 1.5]])

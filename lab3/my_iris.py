@@ -4,33 +4,35 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 
-# Sample data creation for demonstration purposes
+#Загрузка датасета
 my_df = pd.read_csv("data_set.csv")
 
-# Selecting columns X and Y
+#Добавление обозначений
 data = my_df[['X', 'Y']]
 
-# Splitting data into training and testing sets
+#Разделение данных
 X_train, X_test, y_train, y_test = train_test_split(data, my_df['Target'], random_state=0)
 
-# Initializing and training the KNN classifier
+#Создание класификатора
 knn = KNeighborsClassifier(n_neighbors=1)
 knn.fit(X_train, y_train)
 
-# Saving the model to a file
+#Сохранение в файл
 filename = 'my_model.sav'
 with open(filename, 'wb') as file:
     pickle.dump(knn, file)
 
-# Making predictions with the trained model
+#Предсказания
 pr = knn.predict(X_test)
 
-# Loading the model from the file
+print("Прогноз вида на тестовом наборе:\n {}".format(pr))
+print("Точность прогноза на тестовом наборе:{:.2f}".format(np.mean(pr==y_test)))
+
 with open(filename, 'rb') as file:
     loaded_model = pickle.load(file)
 
-# Making predictions with new data points
-X_new1 = np.array([[2, 3], [5, 3]])
+#Предсказания по нашим данным
+X_new1 = np.array([[0.75, 1], [3, -2], [6, -4]])
 X_new_df = pd.DataFrame(X_new1, columns=['X', 'Y'])
 result = loaded_model.predict(X_new_df)
 
