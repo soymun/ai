@@ -6,7 +6,7 @@ os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 from keras.api.datasets import mnist
 from matplotlib import pyplot as plt
 
-np.random.seed(123)
+np.random.seed()
 (X_train, y_train), (X_test, y_test) = mnist.load_data()
 print('Тренировочный набор данных: ', X_train.shape)
 print('Метки тренировочного набора данных :', y_train.shape)
