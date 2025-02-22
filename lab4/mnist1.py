@@ -17,7 +17,7 @@ plt.imshow(X_train[1])
 
 plt.show()
 plt.figure()
-plt.imshow(X_train[1])
+plt.imshow(X_train[2])
 plt.colorbar()
 plt.grid(False)
 plt.show()

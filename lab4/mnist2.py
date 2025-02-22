@@ -1,9 +1,7 @@
 # stage_1_basic_nn.py
-import keras
-import numpy as np
-
 import os
 
+import numpy as np
 from sklearn.metrics import accuracy_score
 
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
@@ -81,3 +79,20 @@ plt.xlabel('Epochs')  # Ось X - количество эпох
 plt.ylabel('Accuracy')  # Ось Y - значение точности
 plt.legend()  # Добавление легенды
 plt.show()  # Отображение графика
+
+first_layer_weights = network.layers[0].get_weights()[0]
+
+# Визуализация весов
+fig, axes = plt.subplots(4, 4, figsize=(10, 10))  # Создаем сетку 4x4 для отображения весов
+fig.suptitle('Weights of the First Layer', fontsize=16)
+
+for i, ax in enumerate(axes.flat):
+    if i < 512:  # Убедимся, что мы не выходим за пределы количества нейронов
+        # Визуализируем веса для i-го нейрона
+        ax.imshow(first_layer_weights[:, i].reshape(28, 28), cmap='viridis')
+        ax.axis('off')  # Отключаем оси
+
+plt.tight_layout()
+plt.show()
+
+
