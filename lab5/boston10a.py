@@ -1,5 +1,6 @@
 import os
 
+from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
 
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
@@ -9,21 +10,11 @@ from keras.api.layers import Dense
 import pandas as pd
 from matplotlib import pyplot as plt
 
-# Загрузка данных
-# Используем URL для загрузки набора данных о ценах на жилье в Бостоне
-url = "https://archive.ics.uci.edu/ml/machine-learning-databases/housing/housing.data"
-
-# Названия столбцов для DataFrame
-column_names = [
-    'CRIM', 'ZN', 'INDUS', 'CHAS', 'NOX', 'RM', 'AGE', 'DIS', 'RAD', 'TAX',
-    'PTRATIO', 'B', 'LSTAT', 'MEDV'
-]
-
 # Загрузка данных в DataFrame
 # sep='\s+' - разделитель (пробелы или табуляции)
 # header=None - отсутствие заголовка в файле
 # names=column_names - задаем имена столбцов
-df = pd.read_csv(url, sep='\s+', header=None, names=column_names)
+df = pd.read_csv("data_normal1.csv", sep=',')
 
 # Разделение данных на обучающую и тестовую выборки
 # test_size - доля тестовой выборки (например, 0.2 для 20%)
@@ -34,15 +25,15 @@ train_df, test_df = train_test_split(df, test_size=0.1, random_state=42)
 # 'RM' - среднее количество комнат в доме
 # 'LSTAT' - процент населения с низким статусом
 # .values - преобразование в массив NumPy
-X = train_df[['RM', 'LSTAT']].values
+X = train_df[['X1', 'X2']].values
 
 # Целевая переменная (MEDV - медианная стоимость дома в тысячах долларов)
-y = train_df['MEDV'].values
+y = train_df['y'].values
 
-X_test = test_df[['RM', 'LSTAT']].values
+X_test = test_df[['X1', 'X2']].values
 
 # Целевая переменная (MEDV - медианная стоимость дома в тысячах долларов)
-y_test = test_df['MEDV'].values
+y_test = test_df['y'].values
 
 # Создание модели
 model = Sequential()  # Инициализация последовательной модели
@@ -70,6 +61,10 @@ model.fit(X, y, epochs=30, batch_size=10, validation_split=0.2)
 # model.predict(X) возвращает предсказанные значения для входных данных X
 predictions = model.predict(X_test)
 
+# Оценка качества моделей с помощью среднеквадратичной ошибки (MSE)
+# Оценка линейной регрессии по двум факторам
+mse_linear = mean_squared_error(y_test, predictions)
+print("MSE линейной регрессии по двум факторам:", mse_linear)
 # Визуализация
 # Построение графика для сравнения фактических и предсказанных значений
 plt.scatter(y_test, predictions)  # Точечный график

@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
+
 
 def wng(x, snr):  # Функция для генерации белого шума
     snr = 10**(snr / 10.0)
@@ -9,7 +11,7 @@ def wng(x, snr):  # Функция для генерации белого шум
 
 # Генерация данных
 np.random.seed()  # Установка seed для воспроизводимости результатов
-X = np.linspace(0, 10, 100)  # Создание массива из 100 точек в диапазоне от 0 до 10 для переменной X
+X = np.linspace(0, 10, 1000)  # Создание массива из 100 точек в диапазоне от 0 до 10 для переменной X
 
 # Генерация целевой переменной y с нелинейной зависимостью
 # y = 2*X + 3*X**2 + 1 + шум
@@ -17,11 +19,20 @@ X = np.linspace(0, 10, 100)  # Создание массива из 100 точе
 y = 2 * X + 3 * X**2 + 1
 
 
-y_normal = y + np.random.normal(0, 1, 100)
+y_normal = y + np.random.normal(0, 10, 1000)
 # Добавление белого шума
 snr = 10  # Отношение сигнал/шум в dB
 white_noise = wng(y, snr)  # Генерация белого шума
 y_with_white_noise = y + white_noise  # Добавление белого шума к данным
+
+# Создание DataFrame для сохранения в CSV
+data_normal = pd.DataFrame({'X': X, 'y': y_normal})  # Данные с нормальным шумом
+data_white = pd.DataFrame({'X': X, 'y': y_with_white_noise})  # Данные с белым шумом
+
+# Сохранение в CSV
+data_normal.to_csv('data_normal3.csv', index=False)  # Файл с нормальным шумом
+data_white.to_csv('data_white3.csv', index=False)  # Файл с белым шумом
+
 
 # Визуализация данных
 plt.figure(figsize=(12, 6))

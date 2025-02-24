@@ -1,6 +1,7 @@
 import os
 
 import numpy as np
+from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
 
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
@@ -10,34 +11,11 @@ from keras.api.models import Sequential
 from keras.api.layers import Dense
 from matplotlib import pyplot as plt
 
-# URL для загрузки данных
-# Ссылка на набор данных о ценах на жилье в Бостоне, размещенный в репозитории UCI Machine Learning Repository
-url = "https://archive.ics.uci.edu/ml/machine-learning-databases/housing/housing.data"
-
-# Загрузка данных
-# Список названий столбцов для DataFrame
-column_names = [
-    'CRIM',  # Уровень преступности на душу населения
-    'ZN',    # Доля жилых участков, отведенных под дома с большими участками
-    'INDUS', # Доля не розничных торговых площадей в городе
-    'CHAS',  # Наличие реки (1 - есть, 0 - нет)
-    'NOX',   # Концентрация оксидов азота
-    'RM',    # Среднее количество комнат в доме
-    'AGE',   # Доля домов, построенных до 1940 года
-    'DIS',   # Взвешенное расстояние до пяти рабочих центров Бостона
-    'RAD',   # Индекс доступности радиальных магистралей
-    'TAX',   # Ставка налога на имущество
-    'PTRATIO', # Соотношение учеников и учителей в школах
-    'B',     # Доля афроамериканского населения
-    'LSTAT', # Доля населения с низким статусом
-    'MEDV'   # Медианная стоимость дома (целевая переменная)
-]
-
 # Загрузка данных в DataFrame
 # sep='\s+' - разделитель (пробелы или табуляции)
 # header=None - отсутствие заголовка в файле
 # names=column_names - задаем имена столбцов
-df = pd.read_csv(url, sep='\s+', header=None, names=column_names)
+df = pd.read_csv("data_normal2.csv", sep=',')
 
 train_df, test_df = train_test_split(df, test_size=0.1, random_state=42)
 
@@ -45,15 +23,15 @@ train_df, test_df = train_test_split(df, test_size=0.1, random_state=42)
 # 'RM' - среднее количество комнат в доме
 # 'LSTAT' - процент населения с низким статусом
 # .values - преобразование в массив NumPy
-X = train_df[['RM', 'LSTAT']].values
+X = train_df[['X1', 'X2']].values
 
 # Целевая переменная (MEDV - медианная стоимость дома в тысячах долларов)
-y = train_df['MEDV'].values
+y = train_df['y'].values
 
-X_test = test_df[['RM', 'LSTAT']].values
+X_test = test_df[['X1', 'X2']].values
 
 # Целевая переменная (MEDV - медианная стоимость дома в тысячах долларов)
-y_test = test_df['MEDV'].values
+y_test = test_df['y'].values
 
 # Создание взаимодействия признаков
 # X_interaction - новая матрица признаков, включающая:
@@ -97,6 +75,10 @@ model_interaction.fit(X_interaction, y, epochs=30, batch_size=10, validation_spl
 # Предсказание
 # model_interaction.predict(X_interaction) возвращает предсказанные значения для входных данных X_interaction
 predictions_interaction = model_interaction.predict(X_interaction_test)
+
+# Оценка линейной регрессии со взаимодействием факторов
+mse_interaction = mean_squared_error(y_test, predictions_interaction)
+print("MSE линейной регрессии со взаимодействием факторов:", mse_interaction)
 
 # Визуализация
 plt.scatter(y_test, predictions_interaction)

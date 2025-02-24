@@ -40,7 +40,7 @@ column_names = [
 # names=column_names - задаем имена столбцов
 df = pd.read_csv(url, sep='\s+', header=None, names=column_names)
 
-train_df, test_df = train_test_split(df, test_size=0.2, random_state=42)
+train_df, test_df = train_test_split(df, test_size=0.1, random_state=42)
 
 # Выбор двух наиболее значимых признаков
 # X - матрица признаков, содержащая два признака: 'RM' (среднее количество комнат) и 'LSTAT' (доля населения с низким статусом)
