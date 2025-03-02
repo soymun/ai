@@ -1,5 +1,7 @@
 import os
 
+import numpy as np
+
 # Отключаем оптимизации OneDNN для TensorFlow для совместимости
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
@@ -10,6 +12,25 @@ from keras.api.layers import Dense, Dropout  # Полносвязный слой
 from keras.api.utils import to_categorical  # Преобразование меток в one-hot encoding
 from keras.src.legacy.preprocessing.text import Tokenizer  # Токенизатор для текста
 import matplotlib.pyplot as plt  # Библиотека для визуализации данных
+
+
+def print_predictions(model, x_test, y_test, num_samples=5, countUnits=32):
+    # Выбираем случайные индексы из тестового набора
+    random_indices = np.random.choice(len(x_test), num_samples, replace=False)
+
+    # Получаем предсказания для выбранных данных
+    predictions = model.predict(x_test[random_indices])
+
+    # Преобразуем предсказания и фактические значения в метки классов
+    predicted_labels = np.argmax(predictions, axis=1)
+    actual_labels = np.argmax(y_test[random_indices], axis=1)
+
+    print(f"Модель с количеством нейронов - {countUnits}")
+    # Выводим результаты
+    for i in range(num_samples):
+        print(f"Предсказанное значение - {predicted_labels[i]}")
+        print(f"Фактическое значение - {actual_labels[i]}")
+        print()
 
 # Загрузка данных Reuters
 # num_words=10000 — ограничиваем словарь 10,000 наиболее часто встречающихся слов
@@ -47,6 +68,7 @@ def create_model(units):
 # Список количества нейронов в слоях для тестирования
 units_list = [32, 64, 128]
 histories = []  # Список для хранения истории обучения каждой модели
+models = []
 
 # Обучение моделей с разным количеством нейронов
 for units in units_list:
@@ -57,6 +79,7 @@ for units in units_list:
     # validation_split=0.2 — 20% данных используются для валидации
     history = model.fit(x_train, y_train, epochs=10, batch_size=32, validation_split=0.2, verbose=1)
     histories.append(history)  # Сохранение истории обучения
+    models.append(model)
     # Оценка модели на тестовых данных
     loss, accuracy = model.evaluate(x_test, y_test, verbose=0)
     print(f'Model with {units} units - Test Loss: {loss}, Test Accuracy: {accuracy}')
@@ -83,6 +106,8 @@ for i, units in enumerate(units_list):
     plt.xlabel('Эпохи')  # Подпись оси X
     plt.ylabel('Потери')  # Подпись оси Y
     plt.legend()  # Добавление легенды
+
+    print_predictions(models[i], x_test, y_test, 5, units)
 
 plt.tight_layout()  # Автоматическая настройка расположения графиков
 plt.show()  # Отображение всех графиков
