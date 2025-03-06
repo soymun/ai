@@ -1,88 +1,107 @@
+# %%
+"""
+## VGG16
+"""
 import os
+
 # Отключаем оптимизации OneDNN для совместимости
 # OneDNN — это библиотека для оптимизации вычислений, но иногда она может вызывать проблемы с совместимостью
 os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
 
-# Импорт библиотек
-from keras import models  # Импорт модуля для создания моделей
-from keras.api.applications import VGG16  # Импорт предварительно обученной модели VGG16
-from keras.api.preprocessing import image  # Импорт модуля для работы с изображениями
-import keras.api.utils  # Импорт утилит Keras
-import numpy as np  # Импорт библиотеки для работы с массивами
-import matplotlib.pyplot as plt  # Импорт библиотеки для визуализации
+# %%
+import keras
+import numpy as np
+import matplotlib.pyplot as plt
+from keras.api.applications import VGG16  # Импорт модели VGG16
+from keras import layers, models  # Импорт слоев и моделей Keras
 
-# Загрузка предварительно обученной модели VGG16
-# weights='imagenet' — используем веса, обученные на наборе данных ImageNet
-# include_top=False — исключаем полносвязные слои на вершине сети (используем только сверточные слои)
-# input_shape=(150, 150, 3) — задаем размер входного изображения (150x150 пикселей, 3 канала — RGB)
-model = VGG16(weights='imagenet', include_top=False, input_shape=(150, 150, 3))
+# Задаем размеры изображения
+HIGHT = 150
+WIDTH = 150
 
-# Загрузка изображения
-img_path = 'img.png'  # Указываем путь к изображению
-# Загружаем изображение и изменяем его размер до 150x150 пикселей
-img = keras.utils.load_img(img_path, target_size=(150, 150))
-# Преобразуем изображение в массив numpy
-img_tensor = keras.utils.img_to_array(img)
-# Добавляем дополнительную ось (batch dimension), чтобы изображение соответствовало формату входных данных модели
-img_tensor = np.expand_dims(img_tensor, axis=0)
-# Нормализация изображения (приведение значений пикселей к диапазону [0, 1])
-img_tensor /= 255.0
-# Выводим форму тензора изображения (1, 150, 150, 3) — 1 изображение, 150x150 пикселей, 3 канала (RGB)
-print("Форма тензора изображения:", img_tensor.shape)
+# Загрузка модели VGG16 без верхних слоев (include_top=False)
+# input_shape=(HIGHT, WIDTH, 3) — входные данные: изображения размером 150x150 с 3 каналами (RGB)
+model = VGG16(include_top=False, input_shape=(HIGHT, WIDTH, 3))
 
-# Создание модели для извлечения промежуточных активаций
-# Берем выходы первых 8 слоев модели VGG16
-layer_outputs = [layer.output for layer in model.layers[:8]]
-# Создаем новую модель, которая принимает входные данные VGG16 и возвращает выходы первых 8 слоев
-activation_model = models.Model(inputs=model.input, outputs=layer_outputs)
+"""
+Block 1:
 
-# Получение активаций для входного изображения
-# Передаем изображение в модель и получаем активации (выходы) для каждого из первых 8 слоев
-activations = activation_model.predict(img_tensor)
+Conv2D (64 filters): Первый сверточный слой с 64 фильтрами размером 3x3. Эти фильтры извлекают базовые признаки, такие как границы и текстуры.
 
-# Визуализация карт признаков
-# Получаем имена первых 8 слоев
-layer_names = [layer.name for layer in model.layers[:8]]
-# Количество карт признаков в строке для визуализации
-images_per_row = 16
+Conv2D (64 filters): Второй сверточный слой с 64 фильтрами размером 3x3. Эти фильтры дополнительно обрабатывают признаки, извлеченные первым слоем.
 
-# Перебираем слои и их активации
-for layer_name, layer_activation in zip(layer_names, activations):
-    # Количество карт признаков в текущем слое
-    n_features = layer_activation.shape[-1]
-    # Размер карты признаков (ширина и высота)
-    size = layer_activation.shape[1]
+Block 2:
 
-    # Количество столбцов для визуализации
-    n_cols = n_features // images_per_row
-    # Создаем сетку для отображения карт признаков
-    display_grid = np.zeros((size * n_cols, images_per_row * size))
+Conv2D (128 filters): Третий сверточный слой с 128 фильтрами размером 3x3. Эти фильтры извлекают более сложные признаки.
 
-    # Заполняем сетку картами признаков
-    for col in range(n_cols):
-        for row in range(images_per_row):
-            # Извлекаем карту признаков
-            channel_image = layer_activation[0, :, :, col * images_per_row + row]
-            # Нормализация карты признаков
-            channel_image -= channel_image.mean()
-            channel_image /= channel_image.std()
-            channel_image *= 64
-            channel_image += 128
-            # Ограничиваем значения пикселей диапазоном [0, 255] и преобразуем в целые числа
-            channel_image = np.clip(channel_image, 0, 255).astype('uint8')
-            # Размещаем карту признаков в сетке
-            display_grid[col * size : (col + 1) * size, row * size : (row + 1) * size] = channel_image
+Conv2D (128 filters): Четвертый сверточный слой с 128 фильтрами размером 3x3. Эти фильтры дополнительно обрабатывают признаки, извлеченные предыдущим слоем.
 
-    # Масштабируем изображение для отображения
-    scale = 1. / size
-    # Создаем фигуру для визуализации
-    plt.figure(figsize=(scale * display_grid.shape[1], scale * display_grid.shape[0]))
-    # Заголовок — имя слоя
-    plt.title(layer_name)
-    # Скрываем сетку
-    plt.grid(False)
-    # Отображаем карты признаков
-    plt.imshow(display_grid, aspect='auto', cmap='viridis')
+Block 3:
 
-# Показываем все изображения
-plt.show()
+Conv2D (256 filters): Пятый сверточный слой с 256 фильтрами размером 3x3. Эти фильтры извлекают еще более сложные и абстрактные признаки.
+
+Conv2D (256 filters): Шестой сверточный слой с 256 фильтрами размером 3x3.
+
+Conv2D (256 filters): Седьмой сверточный слой с 256 фильтрами размером 3x3.
+
+Block 4:
+
+Conv2D (512 filters): Восьмой сверточный слой с 512 фильтрами размером 3x3. Эти фильтры извлекают высокоуровневые признаки.
+
+Conv2D (512 filters): Девятый сверточный слой с 512 фильтрами размером 3x3.
+
+Conv2D (512 filters): Десятый сверточный слой с 512 фильтрами размером 3x3.
+
+Block 5:
+
+Conv2D (512 filters): Одиннадцатый сверточный слой с 512 фильтрами размером 3x3.
+
+Conv2D (512 filters): Двенадцатый сверточный слой с 512 фильтрами размером 3x3.
+
+Conv2D (512 filters): Тринадцатый сверточный слой с 512 фильтрами размером 3x3.
+"""
+
+# Загрузка изображения и изменение его размера до 150x150
+img = keras.utils.load_img("img.png", target_size=(HIGHT, WIDTH))
+
+# Преобразование изображения в массив numpy и нормализация значений пикселей в диапазон [0, 1]
+tensor = keras.utils.img_to_array(img)
+tensor = np.expand_dims(tensor, axis=0) / 255.0
+
+# Создание модели для извлечения активаций всех слоев
+# inputs=model.input — входные данные модели VGG16
+# outputs=[layer.output for layer in model.layers] — выходные данные всех слоев модели
+extraction_model = models.Model(
+    inputs=model.input, outputs=[layer.output for layer in model.layers]
+)
+
+# Проход по всем сверточным слоям (Conv2D) модели VGG16
+for name, activation in zip(
+    [layer.name for layer in model.layers if isinstance(layer, layers.Conv2D)],  # Имена сверточных слоев
+    extraction_model.predict(tensor),  # Активации для каждого слоя
+):
+    # Получение количества фильтров и размера активаций
+    features, size = activation.shape[-1], activation.shape[1]
+    max_features = min(features, 64)  # Ограничиваем количество фильтров до 64 для визуализации
+    rows = (max_features + 7) // 8  # Количество строк в сетке для визуализации
+    cols = 8  # Количество столбцов в сетке для визуализации
+
+    # Создание пустого изображения для визуализации активаций
+    pixels = np.zeros((size * rows, size * cols))
+    for i in range(max_features):
+        row, col = divmod(i, cols)  # Вычисление позиции фильтра в сетке
+        img = activation[0, :, :, i]  # Активация для текущего фильтра
+        # Нормализация и масштабирование активаций для визуализации
+        img = np.clip((img - img.mean()) / img.std() * 64 + 128, 0, 255).astype("uint8")
+        # Размещение активации в соответствующей позиции сетки
+        pixels[row * size : (row + 1) * size, col * size : (col + 1) * size] = img
+
+    # Масштабирование изображения для отображения
+    scale = 1.0 / size
+    plt.figure(figsize=(scale * pixels.shape[1], scale * pixels.shape[0]))
+    plt.title(name)  # Заголовок графика с именем слоя
+    plt.grid(False)  # Отключение сетки
+    plt.axis("off")  # Отключение осей
+    plt.imshow(pixels, aspect="auto", cmap="viridis")  # Отображение активаций
+
+plt.show()  # Показ всех графиков
